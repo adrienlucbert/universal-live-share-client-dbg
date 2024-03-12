@@ -1,6 +1,10 @@
+mod rpc;
+mod shell;
+
 use clap::Parser;
-use jsonrpsee::proc_macros::rpc;
 use jsonrpsee::ws_client::WsClientBuilder;
+use log::warn;
+use rpc::traits::RpcClient;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -14,50 +18,25 @@ struct Args {
     port: u32,
 }
 
-#[rpc(client)]
-pub trait Rpc {
-    /// Ping.
-    #[method(name = "ping")]
-    async fn ping(&self) -> Result<String, ErrorObjectOwned>;
-}
-
-struct ShellState {
-    client: jsonrpsee::ws_client::WsClient,
-}
-
-use std::error::Error;
-
-use rustyline::DefaultEditor;
-use shellfish::{async_fn, handler::DefaultAsyncHandler, Command, Shell};
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init_from_env(
+        env_logger::Env::default().default_filter_or("none,universal_live_share_client_dbg=trace"),
+    );
+
     let args = Args::parse();
     let server_addr = format!("{}:{}", args.host, args.port);
     let url = format!("ws://{}", server_addr);
     let client = WsClientBuilder::default().build(&url).await?;
 
-    let mut shell = Shell::new_with_async_handler(
-        ShellState { client },
-        "> ",
-        DefaultAsyncHandler::default(),
-        DefaultEditor::new()?,
-    );
+    let server_protocol_version = client.version().await?;
+    if server_protocol_version != rpc::traits::PROTOCOL_VERSION {
+        warn!(
+            "Client protocol version ({}) differs from server's ({}).",
+            rpc::traits::PROTOCOL_VERSION,
+            server_protocol_version
+        );
+    }
 
-    shell.commands.insert(
-        "ping",
-        Command::new_async(
-            "Displays a plaintext file.".to_string(),
-            async_fn!(ShellState, ping),
-        ),
-    );
-
-    shell.run_async().await?;
-    Ok(())
-}
-
-async fn ping(state: &mut ShellState, _args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    let connection_id_first = state.client.ping().await?;
-    println!("{}", connection_id_first);
-    Ok(())
+    shell::run(shell::ShellState { client }).await
 }

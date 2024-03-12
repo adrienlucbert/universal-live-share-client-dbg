@@ -8,7 +8,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.80"
 clap = { version = "4.5.2", features = ["derive"] }
+env_logger = "0.11.3"
 jsonrpsee = { version = "0.22.2", features = ["client", "ws-client", "macros"] }
+log = "0.4.21"
 rustyline = "13.0.0"
 shellfish = { version = "0.9.0", features = ["app", "async-std", "async", "tokio"] }
 tokio = { version = "1.36.0", features = ["full"] }
