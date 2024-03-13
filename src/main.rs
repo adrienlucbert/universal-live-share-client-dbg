@@ -1,13 +1,10 @@
 mod logger;
+mod rpc;
 mod shell;
 
 use clap::Parser;
 
-use hello_world::greeter_client::GreeterClient;
-
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
-}
+use rpc::live_share::live_share_client::LiveShareClient;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -28,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let server_addr = format!("{}:{}", args.host, args.port);
-    let client = GreeterClient::connect(format!("http://{}", server_addr)).await?;
+    let client = LiveShareClient::connect(format!("http://{}", server_addr)).await?;
 
     shell::run(shell::ShellState { client }).await?;
     Ok(())
