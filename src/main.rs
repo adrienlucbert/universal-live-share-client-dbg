@@ -3,6 +3,7 @@ mod rpc;
 mod shell;
 
 use clap::Parser;
+use log::warn;
 
 use rpc::live_share::live_share_client::LiveShareClient;
 
@@ -25,7 +26,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let server_addr = format!("{}:{}", args.host, args.port);
-    let client = LiveShareClient::connect(format!("http://{}", server_addr)).await?;
+    let mut client = LiveShareClient::connect(format!("http://{}", server_addr)).await?;
+
+    match client.version(()).await?.get_ref().message.as_str() {
+        rpc::live_share::PROTOCOL_VERSION => (),
+        server_protocol_version => warn!(
+            "Client protocol version ({}) differs from server's ({}).",
+            rpc::live_share::PROTOCOL_VERSION,
+            server_protocol_version
+        ),
+    }
 
     shell::run(shell::ShellState { client }).await?;
     Ok(())
