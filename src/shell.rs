@@ -2,9 +2,12 @@ mod commands;
 
 use rustyline::DefaultEditor;
 use shellfish::{handler::DefaultAsyncHandler, Shell};
+use tonic::transport::Channel;
+
+use crate::hello_world::greeter_client::GreeterClient;
 
 pub struct ShellState {
-    pub client: jsonrpsee::ws_client::WsClient,
+    pub client: GreeterClient<Channel>,
 }
 
 pub async fn run(state: ShellState) -> Result<(), Box<dyn std::error::Error>> {
@@ -15,7 +18,6 @@ pub async fn run(state: ShellState) -> Result<(), Box<dyn std::error::Error>> {
         DefaultEditor::new()?,
     );
 
-    shell.commands.insert("ping", commands::ping());
-    shell.commands.insert("version", commands::version());
+    shell.commands.insert("say-hello", commands::say_hello());
     Ok(shell.run_async().await?)
 }

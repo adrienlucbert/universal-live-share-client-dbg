@@ -1,5 +1,2 @@
-mod ping;
-pub use ping::as_command as ping;
-
-mod version;
-pub use version::as_command as version;
+mod say_hello;
+pub use say_hello::as_command as say_hello;
