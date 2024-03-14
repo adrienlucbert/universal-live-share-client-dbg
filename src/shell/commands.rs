@@ -1,3 +1,6 @@
+mod initialize;
+pub use initialize::as_command as initialize;
+
 mod ping;
 pub use ping::as_command as ping;
 

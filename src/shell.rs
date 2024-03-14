@@ -20,5 +20,6 @@ pub async fn run(state: ShellState) -> Result<(), Box<dyn std::error::Error>> {
 
     shell.commands.insert("ping", commands::ping());
     shell.commands.insert("version", commands::version());
+    shell.commands.insert("initialize", commands::initialize());
     Ok(shell.run_async().await?)
 }
